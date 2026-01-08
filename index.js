@@ -31,6 +31,16 @@ const RSS_SOURCES = {
   'TenChat #лендинг': 'https://tenchat.ru/media/hashtag/лендинг/rss',
   'TenChat #автоматизация': 'https://tenchat.ru/media/hashtag/автоматизация/rss',
   'TenChat #маркетинг': 'https://tenchat.ru/media/hashtag/маркетинг/rss',
+
+  // YouTube поиск через RSSHub
+  'YouTube: GetCourse': 'https://rsshub.app/youtube/search/getcourse',
+  'YouTube: Prodamus': 'https://rsshub.app/youtube/search/prodamus.xl',
+  'YouTube: Лендинги': 'https://rsshub.app/youtube/search/создание+лендингов',
+  'YouTube: Автоматизация': 'https://rsshub.app/youtube/search/автоматизация+онлайн+школы',
+  'YouTube: Кастомизация': 'https://rsshub.app/youtube/search/кастомизация+getcourse',
+  'YouTube: Оформление': 'https://rsshub.app/youtube/search/оформление+getcourse',
+  'YouTube: Prodamus.XL': 'https://rsshub.app/youtube/search/оформление+prodamus.xl',
+  
   // YouTube каналы по вашей тематике (добавьте свои)
   // Формат: 'Название': 'https://www.youtube.com/feeds/videos.xml?channel_id=ID_КАНАЛА'
 };
