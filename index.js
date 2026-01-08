@@ -41,25 +41,6 @@ const RSS_SOURCES = {
   'YouTube: Оформление': 'https://rsshub.app/youtube/search/оформление+getcourse',
   'YouTube: Prodamus.XL': 'https://rsshub.app/youtube/search/оформление+prodamus.xl',
 
-  RSS-ссылки для YouTube каналов по вашим темам. Просто скопируйте и вставьте код.
-
-Готовый код с параметром YouTube для парсинга
-Вставьте это в раздел RSS_SOURCESвашего index.js:
-
-javascript
-const RSS_SOURCES = {
-  // Текстовые источники
-  'VC.ru': 'https://vc.ru/rss',
-  'Habr': 'https://habr.com/ru/rss/all/all/',
-  'РБК Технологии': 'https://rssexport.rbc.ru/rbcnews/news/20/full.rss',
-  
-  // TenChat хэштеги
-  'TenChat #GetCourse': 'https://tenchat.ru/media/hashtag/getcourse/rss',
-  'TenChat #лендинг': 'https://tenchat.ru/media/hashtag/лендинг/rss',
-  'TenChat #автоматизация': 'https://tenchat.ru/media/hashtag/автоматизация/rss',
-  'TenChat #онлайншкола': 'https://tenchat.ru/media/hashtag/онлайншкола/rss',
-  'TenChat #вебразработка': 'https://tenchat.ru/media/hashtag/вебразработка/rss',
-  
   // YouTube каналы - GetCourse
   'YouTube: GetCourse Media': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCnQC5B3vy-qoGJPzvUC-SLQ',
   'YouTube: HelloBiz GetCourse': 'https://www.youtube.com/feeds/videos.xml?channel_id=UC8vL0vAYcb2CNWYJPuR1N6Q',
