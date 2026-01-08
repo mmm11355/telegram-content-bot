@@ -40,6 +40,45 @@ const RSS_SOURCES = {
   'YouTube: Кастомизация': 'https://rsshub.app/youtube/search/кастомизация+getcourse',
   'YouTube: Оформление': 'https://rsshub.app/youtube/search/оформление+getcourse',
   'YouTube: Prodamus.XL': 'https://rsshub.app/youtube/search/оформление+prodamus.xl',
+
+  RSS-ссылки для YouTube каналов по вашим темам. Просто скопируйте и вставьте код.
+
+Готовый код с параметром YouTube для парсинга
+Вставьте это в раздел RSS_SOURCESвашего index.js:
+
+javascript
+const RSS_SOURCES = {
+  // Текстовые источники
+  'VC.ru': 'https://vc.ru/rss',
+  'Habr': 'https://habr.com/ru/rss/all/all/',
+  'РБК Технологии': 'https://rssexport.rbc.ru/rbcnews/news/20/full.rss',
+  
+  // TenChat хэштеги
+  'TenChat #GetCourse': 'https://tenchat.ru/media/hashtag/getcourse/rss',
+  'TenChat #лендинг': 'https://tenchat.ru/media/hashtag/лендинг/rss',
+  'TenChat #автоматизация': 'https://tenchat.ru/media/hashtag/автоматизация/rss',
+  'TenChat #онлайншкола': 'https://tenchat.ru/media/hashtag/онлайншкола/rss',
+  'TenChat #вебразработка': 'https://tenchat.ru/media/hashtag/вебразработка/rss',
+  
+  // YouTube каналы - GetCourse
+  'YouTube: GetCourse Media': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCnQC5B3vy-qoGJPzvUC-SLQ',
+  'YouTube: HelloBiz GetCourse': 'https://www.youtube.com/feeds/videos.xml?channel_id=UC8vL0vAYcb2CNWYJPuR1N6Q',
+  
+  // YouTube каналы - Маркетинг и воронки продаж
+  'YouTube: Андрей Кисленко': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCi7VZp1LqoHvqJ0vZq7qceg',
+  'YouTube: Гусаров Маркетинг': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCqB8pY5v9WqHnEzEcU5dKuw',
+  
+  // YouTube каналы - Веб-разработка и JavaScript
+  'YouTube: Web Developer Blog': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCyDp1wzxJB7hISJ26d4vKTw',
+  'YouTube: Гоша Дударь': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCvuY904el7JvBlPbdqbfguw',
+  'YouTube: Владилен Минин': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCg8ss4xW9jASrqWGP30jXiw',
+  
+  // YouTube каналы - Дизайн и Figma/Tilda
+  'YouTube: Игорь Джазов': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCPb0-A8JC9GD0cHoqL0SQQw',
+  'YouTube: Groward Academy': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCTELWyxSHvLGRxvPqz4L7KA',
+  
+  // YouTube каналы - Боты и автоматизация (Prodamus, Telegram)
+  'YouTube: LEADTEX Боты': 'https://www.youtube.com/feeds/videos.xml?channel_id=UC9_DBtLvJ9t8bQYQSYOIo-A',
   
   // YouTube каналы по вашей тематике (добавьте свои)
   // Формат: 'Название': 'https://www.youtube.com/feeds/videos.xml?channel_id=ID_КАНАЛА'
