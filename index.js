@@ -30,6 +30,24 @@ const RSS_SOURCES = {
   'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
   
   'GetCourse Блог': 'https://getcourse.ru/blog/rss',
+
+  // ========== TELEGRAM КАНАЛЫ (через RSSHub) ==========
+  'TG: GetCourse Official': 'https://rsshub.app/telegram/channel/getcourse_official',
+  'TG: Tilda News': 'https://rsshub.app/telegram/channel/tildanews',
+  'TG: Тильдошная': 'https://rsshub.app/telegram/channel/tildoshnaya',
+  'TG: Продамус': 'https://rsshub.app/telegram/channel/prodamus_ru',
+  'TG: Digital маркетинг': 'https://rsshub.app/telegram/channel/digitalmarketingnews',
+  
+  // ========== МАРКЕТИНГ И DIGITAL ==========
+  'Cossa': 'https://www.cossa.ru/rss/',
+  'Pressfeed Blog': 'https://news.pressfeed.ru/feed/',
+  'TexTerra': 'https://texterra.ru/feed',
+  'Netology Blog': 'https://netology.ru/blog/rss',
+  
+  // ========== ЯНДЕКС.ДЗЕН (через RSS) ==========
+  'Дзен: Онлайн-обучение': 'https://dzen.ru/list/education/onlain-obuchenie-vkontakte?issue_tld=ru&rss=1',
+  'Дзен: Маркетинг': 'https://dzen.ru/marketing?rss=1',
+  'Дзен: Технологии': 'https://dzen.ru/tech?rss=1',
 };
 
 async function dailyDigest() {
