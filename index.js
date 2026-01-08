@@ -23,7 +23,14 @@ const RSS_SOURCES = {
   'VC.ru': 'https://vc.ru/rss',
   'Habr': 'https://habr.com/ru/rss/all/all/',
   'РБК Технологии': 'https://rssexport.rbc.ru/rbcnews/news/20/full.rss',
-  
+
+
+  // TenChat хэштеги
+  'TenChat #GetCourse': 'https://tenchat.ru/media/hashtag/getcourse/rss',
+  'TenChat #онлайн-школа': 'https://tenchat.ru/media/hashtag/онлайн-школа/rss',
+  'TenChat #лендинг': 'https://tenchat.ru/media/hashtag/лендинг/rss',
+  'TenChat #автоматизация': 'https://tenchat.ru/media/hashtag/автоматизация/rss',
+  'TenChat #маркетинг': 'https://tenchat.ru/media/hashtag/маркетинг/rss',
   // YouTube каналы по вашей тематике (добавьте свои)
   // Формат: 'Название': 'https://www.youtube.com/feeds/videos.xml?channel_id=ID_КАНАЛА'
 };
