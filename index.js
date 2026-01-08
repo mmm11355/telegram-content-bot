@@ -33,6 +33,22 @@ const RSS_SOURCES = {
   'TG: GetCourse Pro': 'https://rsshub.app/telegram/channel/GetCourseProfi',
   'TG: GetCourse Expert': 'https://rsshub.app/telegram/channel/GetCourseExpert',
   'YouTube: GetCourse Media': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCnQC5B3vy-qoGJPzvUC-SLQ',
+
+  'YouTube: Крис Буратти GetCourse': 'https://www.youtube.com/feeds/videos.xml?channel_id=UC8m9Ow5dZvHl4qD7xQ0r9Mw',
+  'YouTube: AdGetCourse': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCadgetcourse',
+  'YouTube: Albato интеграции': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCPvmMWN0YzbzGjjm3PfhzHw',
+  
+  // Prodamus конкуренты - YouTube
+  'YouTube: Prodamus Official': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCprodamus_official',
+  'YouTube: TeleBoss': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCteleboss',
+
+  'YouTube: Крис Буратти GetCourse': 'https://www.youtube.com/feeds/videos.xml?channel_id=UC8m9Ow5dZvHl4qD7xQ0r9Mw',
+  'YouTube: AdGetCourse': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCadgetcourse',
+  'YouTube: Albato интеграции': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCPvmMWN0YzbzGjjm3PfhzHw',
+  
+  // Prodamus конкуренты - YouTube
+  'YouTube: Prodamus Official': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCprodamus_official',
+  'YouTube: TeleBoss': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCteleboss',
   
   // Tilda конкуренты
   'TG: Tilda News': 'https://rsshub.app/telegram/channel/tildanews',
