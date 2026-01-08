@@ -30,10 +30,7 @@ const RSS_SOURCES = {
   // YouTube
   'YouTube: Владилен Минин': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCg8ss4xW9jASrqWGP30jXiw',
   'YouTube: Гоша Дударь': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCvuY904el7JvBlPbdqbfguw',
-  'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
   
-  // РБК
-  'РБК Технологии': 'https://rssexport.rbc.ru/rbcnews/news/20/full.rss',
   
 }; 
 async function dailyDigest() {
@@ -83,7 +80,7 @@ async function dailyDigest() {
     
     console.log(`📊 Всего собрано материалов: ${allArticles.length}`);
     
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     
     const digestPrompt = `Ты эксперт по автоматизации онлайн-школ и веб-разработке.
 
@@ -190,7 +187,7 @@ async function generateIdeas() {
   console.log('💡 Генерирую идеи...');
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     
     const prompt = `Ты стратег по контенту и эксперт по автоматизации онлайн-школ.
 
@@ -273,7 +270,7 @@ bot.onText(/\/analyze (.+)/, async (msg, match) => {
   await bot.sendMessage(msg.chat.id, '⏳ Анализирую...');
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     
     const prompt = `Проанализируй этот материал как эксперт по GetCourse и веб-разработке: ${url}
 
