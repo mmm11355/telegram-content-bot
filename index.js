@@ -35,7 +35,7 @@ const RSS_SOURCES = {
   // РБК
   'РБК Технологии': 'https://rssexport.rbc.ru/rbcnews/news/20/full.rss',
   
-
+}; 
 async function dailyDigest() {
   console.log('📊 Создаю дайджест...');
   
