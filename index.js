@@ -21,49 +21,19 @@ const WEBHOOK_URL = process.env.RENDER_EXTERNAL_URL
 console.log('🤖 Бот запущен!');
 
 const RSS_SOURCES = {
+  // Проверенные источники (100% работают)
   'VC.ru': 'https://vc.ru/rss',
   'Habr': 'https://habr.com/ru/rss/all/all/',
-  'VC.ru Образование': 'https://vc.ru/education/rss',
+  'Habr Веб-разработка': 'https://habr.com/ru/rss/hub/webdev/all/',
+  'Cossa': 'https://www.cossa.ru/rss/',
   
+  // YouTube
   'YouTube: Владилен Минин': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCg8ss4xW9jASrqWGP30jXiw',
   'YouTube: Гоша Дударь': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCvuY904el7JvBlPbdqbfguw',
   'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
   
-  'GetCourse Блог': 'https://getcourse.ru/blog/rss',
-
-  // ========== TELEGRAM КАНАЛЫ (через RSSHub) ==========
-  'TG: GetCourse Official': 'https://rsshub.app/telegram/channel/getcourse_official',
-  'TG: Tilda News': 'https://rsshub.app/telegram/channel/tildanews',
-  'TG: Тильдошная': 'https://rsshub.app/telegram/channel/tildoshnaya',
-  'TG: Продамус': 'https://rsshub.app/telegram/channel/prodamus_ru',
-  'TG: Digital маркетинг': 'https://rsshub.app/telegram/channel/digitalmarketingnews',
-
-  'TenChat #getcourse': 'https://tenchat.ru/media/hashtag/getcourse/rss',
-  'TenChat #маркетинг': 'https://tenchat.ru/media/hashtag/маркетинг/rss',
-  'TenChat #автоматизация': 'https://tenchat.ru/media/hashtag/автоматизация/rss',
-
-  // Агентства и консультанты
-'Traffandsales': 'https://traffandsales.ru/feed',
-'GetHelpers': 'https://gethelpers.ru/feed',
-'API Monster': 'https://apimonster.ru/feed',
-'Vakas Tools': 'https://vakas-tools.ru/feed',
-
-// Образовательные платформы
-'Skillbox Media': 'https://skillbox.ru/media/feed/',
-'Нетология Блог': 'https://netology.ru/blog/rss',
-  
-  
-  // ========== МАРКЕТИНГ И DIGITAL ==========
-  'Cossa': 'https://www.cossa.ru/rss/',
-  'Pressfeed Blog': 'https://news.pressfeed.ru/feed/',
-  'TexTerra': 'https://texterra.ru/feed',
-  'Netology Blog': 'https://netology.ru/blog/rss',
-  
-  // ========== ЯНДЕКС.ДЗЕН (через RSS) ==========
-  'Дзен: Онлайн-обучение': 'https://dzen.ru/list/education/onlain-obuchenie-vkontakte?issue_tld=ru&rss=1',
-  'Дзен: Маркетинг': 'https://dzen.ru/marketing?rss=1',
-  'Дзен: Технологии': 'https://dzen.ru/tech?rss=1',
-};
+  // РБК
+  'РБК Технологии': 'https://rssexport.rbc.ru/rbcnews/news/20/full.rss',
 
 async function dailyDigest() {
   console.log('📊 Создаю дайджест...');
@@ -112,7 +82,7 @@ async function dailyDigest() {
     
     console.log(`📊 Всего собрано материалов: ${allArticles.length}`);
     
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
     
     const digestPrompt = `Ты эксперт по автоматизации онлайн-школ и веб-разработке.
 
@@ -219,7 +189,7 @@ async function generateIdeas() {
   console.log('💡 Генерирую идеи...');
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
     
     const prompt = `Ты стратег по контенту и эксперт по автоматизации онлайн-школ.
 
@@ -302,7 +272,7 @@ bot.onText(/\/analyze (.+)/, async (msg, match) => {
   await bot.sendMessage(msg.chat.id, '⏳ Анализирую...');
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
     
     const prompt = `Проанализируй этот материал как эксперт по GetCourse и веб-разработке: ${url}
 
