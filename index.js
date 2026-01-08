@@ -37,6 +37,21 @@ const RSS_SOURCES = {
   'TG: Тильдошная': 'https://rsshub.app/telegram/channel/tildoshnaya',
   'TG: Продамус': 'https://rsshub.app/telegram/channel/prodamus_ru',
   'TG: Digital маркетинг': 'https://rsshub.app/telegram/channel/digitalmarketingnews',
+
+  'TenChat #getcourse': 'https://tenchat.ru/media/hashtag/getcourse/rss',
+  'TenChat #маркетинг': 'https://tenchat.ru/media/hashtag/маркетинг/rss',
+  'TenChat #автоматизация': 'https://tenchat.ru/media/hashtag/автоматизация/rss',
+
+  // Агентства и консультанты
+'Traffandsales': 'https://traffandsales.ru/feed',
+'GetHelpers': 'https://gethelpers.ru/feed',
+'API Monster': 'https://apimonster.ru/feed',
+'Vakas Tools': 'https://vakas-tools.ru/feed',
+
+// Образовательные платформы
+'Skillbox Media': 'https://skillbox.ru/media/feed/',
+'Нетология Блог': 'https://netology.ru/blog/rss',
+  
   
   // ========== МАРКЕТИНГ И DIGITAL ==========
   'Cossa': 'https://www.cossa.ru/rss/',
