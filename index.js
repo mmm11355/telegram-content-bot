@@ -79,7 +79,7 @@ async function dailyDigest() {
     
     console.log(`📊 Всего собрано материалов: ${allArticles.length}`);
     
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     const digestPrompt = `Ты эксперт по автоматизации онлайн-школ и веб-разработке.
 
@@ -186,7 +186,7 @@ async function generateIdeas() {
   console.log('💡 Генерирую идеи...');
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     const prompt = `Ты стратег по контенту и эксперт по автоматизации онлайн-школ.
 
@@ -269,7 +269,7 @@ bot.onText(/\/analyze (.+)/, async (msg, match) => {
   await bot.sendMessage(msg.chat.id, '⏳ Анализирую...');
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     const prompt = `Проанализируй этот материал как эксперт по GetCourse и веб-разработке: ${url}
 
