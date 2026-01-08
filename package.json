@@ -1,7 +1,7 @@
 {
   "name": "telegram-content-bot",
   "version": "1.0.0",
-  "description": "AI-бот для анализа контента по юридическим услугам и онлайн-образованию",
+  "description": "AI-бот для анализа контента",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
