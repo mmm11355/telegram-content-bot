@@ -21,7 +21,7 @@ console.log('🤖 Бот запущен!');
 
 // ========== RSS ИСТОЧНИКИ ==========
 const RSS_SOURCES = {
-  // Основные новости
+   // Основные новости
   'VC.ru': 'https://vc.ru/rss',
   'Habr': 'https://habr.com/ru/rss/all/all/',
   'Habr Веб-разработка': 'https://habr.com/ru/rss/hub/webdev/all/',
@@ -45,6 +45,7 @@ const RSS_SOURCES = {
   'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
   'YouTube: Анна Блок': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCn5wduCq2Mus0v85QZn9IaA',
 };
+
 
 // ========== PERPLEXITY API ==========
 async function askPerplexity(prompt) {
@@ -83,7 +84,7 @@ async function askPerplexity(prompt) {
   }
 }
 
-// ========== ГЛАВНАЯ ФУНКЦИЯ ДАЙДЖЕСТА ==========
+// ========== ДАЙДЖЕСТ ==========
 async function dailyDigest() {
   console.log('📊 Создаю дайджест...');
   
@@ -93,14 +94,13 @@ async function dailyDigest() {
     const hourInMs = 60 * 60 * 1000;
 
     if (now - lastDigestTime < hourInMs) {
-      console.log('⏳ Слишком частые запросы. Подождите 1 час.');
+      console.log('⏳ Слишком частые запросы.');
       await bot.sendMessage(CHANNEL_ID, '⏳ Дайджест можно создавать раз в час.');
       return;
     }
 
     global.lastDigestTime = now;
     
-    // ========== ПАРСИНГ RSS ==========
     const allArticles = [];
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -147,145 +147,72 @@ async function dailyDigest() {
     
     if (allArticles.length === 0) {
       console.log('⚠️ Нет свежих материалов');
-      await bot.sendMessage(CHANNEL_ID, '❌ Нет новых материалов за последнюю неделю.');
+      await bot.sendMessage(CHANNEL_ID, '❌ Нет новых материалов за неделю.');
       return;
     }
     
     console.log(`📊 Всего спарсено: ${allArticles.length}`);
     
-    // ========== ФИЛЬТРАЦИЯ ПО ВАШЕЙ ТЕМЕ ==========
     const keywords = [
-      // GetCourse
-      'getcourse', 'геткурс', 'гет курс', 'гк', 'get course',
-      
-      // Prodamus
-      'prodamus', 'продамус', 'продамуса', 'xl', 'prodamus.xl',
-      
-      // Онлайн-школы и курсы
-      'онлайн-школ', 'онлайн школ', 'онлайн-курс', 'онлайн курс',
-      'edtech', 'образовательн', 'обучающ', 'курс', 'школ',
-      
-      // Лендинги и конструкторы
-      'лендинг', 'landing', 'посадочн', 'одностраничник',
-      'tilda', 'тильда', 'конструктор сайт', 'landing page', 'создать сайт',
-      
-      // Личный кабинет
-      'личный кабинет', 'лк', 'кабинет', 'dashboard',
-      'кастомизация кабинет', 'настройка кабинет', 'оформление личного кабинета',
-      
-      // Кастомизация и дизайн
-      'кастомизац', 'кастом', 'персонализац',
-      'дизайн сайт', 'ui/ux', 'интерфейс',
-      'брендинг', 'оформлен',
-      
-      // Скрипты и разработка
-      'javascript', 'js код', 'скрипт для сайт',
-      'вебхук', 'webhook', 'api интеграц',
+      'getcourse', 'геткурс', 'prodamus', 'продамус',
+      'онлайн-школ', 'онлайн курс', 'edtech',
+      'лендинг', 'landing', 'tilda', 'тильда',
+      'личный кабинет', 'кабинет', 'dashboard',
+      'кастомизац', 'дизайн', 'ui/ux',
+      'javascript', 'скрипт', 'webhook', 'api',
       'автоматизац', 'интеграц',
-      
-      // Email и рассылки
-      'email', 'имейл', 'рассылк', 'письм',
-      'триггер', 'автоответчик', 'цепочк писем',
-      
-       // Аналитика
-      'аналитика онлайн', 'метрика', 'яндекс.метрика',
-      'google analytics', 'конверсия', 'a/b тест',
-      
-      // Веб-разработка для онлайн-бизнеса
-      'веб-сервис', 'saas', 'веб-приложен',
-      'rest api', 'backend для курс',
-      
-      // Маркетинг онлайн-школ
-        'продвижение онлайн', 'маркетинг edtech'
+      'платеж', 'оплат', 'email', 'рассылк',
+      'crm', 'воронк', 'бот', 'telegram',
+      'аналитика', 'метрика', 'конверсия'
     ];
     
     const relevantArticles = allArticles.filter(article => {
       const text = (article.title + ' ' + article.snippet).toLowerCase();
-      
-      // Проверяем, есть ли хотя бы одно ключевое слово
-      const isRelevant = keywords.some(keyword => text.includes(keyword.toLowerCase()));
-      
-      if (isRelevant) {
-        console.log(`✅ Релевантно [${article.source}]: ${article.title.substring(0, 50)}...`);
-      }
-      
-      return isRelevant;
+      return keywords.some(keyword => text.includes(keyword.toLowerCase()));
     });
     
-    console.log(`🎯 Релевантных материалов: ${relevantArticles.length} из ${allArticles.length}`);
+    console.log(`🎯 Релевантных: ${relevantArticles.length}`);
     
-    // Если релевантных очень мало - расширяем поиск
     if (relevantArticles.length < 5) {
-      console.log('⚠️ Мало релевантных материалов, добавляю смежные темы...');
-      
-      const softKeywords = [
-        'веб-разработка', 'frontend', 'backend', 'fullstack',
-        'css', 'html', 'верстка', 'адаптив',
-        'дизайн', 'ui', 'ux', 'figma',
-       
-      ];
-      
+      const softKeywords = ['веб-разработк', 'frontend', 'backend', 'react', 'node.js', 'css', 'дизайн', 'ui', 'ux'];
       const additionalArticles = allArticles.filter(article => {
         if (relevantArticles.includes(article)) return false;
-        
         const text = (article.title + ' ' + article.snippet).toLowerCase();
         return softKeywords.some(keyword => text.includes(keyword.toLowerCase()));
       });
-      
       relevantArticles.push(...additionalArticles.slice(0, 10));
-      console.log(`➕ Добавлено ${additionalArticles.slice(0, 10).length} смежных материалов`);
     }
     
     if (relevantArticles.length === 0) {
-      console.log('❌ Нет материалов по вашей теме');
-      await bot.sendMessage(CHANNEL_ID, 
-        `❌ За последнюю неделю нет материалов по темам:\n` +
-        `• GetCourse, Prodamus.XL\n` +
-        `• Лендинги и онлайн-школы\n` +
-        `• Кастомизация и автоматизация\n\n` +
-        `Попробуйте позже!`
-      );
+      await bot.sendMessage(CHANNEL_ID, '❌ Нет материалов по вашей теме.');
       return;
     }
     
-    // Сортировка по дате
     relevantArticles.sort((a, b) => {
       const dateA = a.pubDate ? new Date(a.pubDate) : new Date(0);
       const dateB = b.pubDate ? new Date(b.pubDate) : new Date(0);
       return dateB - dateA;
     });
     
-    // ========== ГРУППИРОВКА ПО ИСТОЧНИКАМ ==========
     const bySource = {};
     relevantArticles.forEach(article => {
-      if (!bySource[article.source]) {
-        bySource[article.source] = [];
-      }
+      if (!bySource[article.source]) bySource[article.source] = [];
       bySource[article.source].push(article);
     });
     
-    // Берем ТОП-3 из каждого источника (только релевантных!)
     const selectedArticles = [];
-    
     Object.keys(bySource).forEach(source => {
       const top3 = bySource[source].slice(0, 3);
       selectedArticles.push(...top3);
-      console.log(`📌 ${source}: взято ${top3.length} релевантных материалов`);
     });
     
-    console.log(`✅ Итого отобрано: ${selectedArticles.length} релевантных материалов`);
-    
-    // ========== ФОРМИРОВАНИЕ ДАЙДЖЕСТА ==========
     let digest = `📰 ДАЙДЖЕСТ: GetCourse и Prodamus.XL\n`;
     digest += `📅 ${weekAgo.toLocaleDateString('ru-RU')} - ${new Date().toLocaleDateString('ru-RU')}\n\n`;
-    digest += `**Материалы по вашим темам (${selectedArticles.length}):**\n\n`;
+    digest += `**Материалы (${selectedArticles.length}):**\n\n`;
     
-    // Группируем по источникам для отображения
     const groupedForDisplay = {};
     selectedArticles.forEach(article => {
-      if (!groupedForDisplay[article.source]) {
-        groupedForDisplay[article.source] = [];
-      }
+      if (!groupedForDisplay[article.source]) groupedForDisplay[article.source] = [];
       groupedForDisplay[article.source].push(article);
     });
     
@@ -298,7 +225,6 @@ async function dailyDigest() {
       });
     });
     
-    // ========== ОТПРАВКА В TELEGRAM ==========
     const maxLength = 4000;
     const messages = [];
     let currentMessage = '';
@@ -312,9 +238,7 @@ async function dailyDigest() {
       }
     });
     
-    if (currentMessage) {
-      messages.push(currentMessage);
-    }
+    if (currentMessage) messages.push(currentMessage);
     
     for (const msg of messages) {
       await bot.sendMessage(CHANNEL_ID, msg, {
@@ -325,69 +249,40 @@ async function dailyDigest() {
     
     console.log('✅ Дайджест опубликован!');
     
-    // ========== СОХРАНЕНИЕ В GOOGLE SHEETS ==========
+    // Сохранение в Google Sheets
     try {
-      console.log(`💾 Сохраняю ${selectedArticles.length} материалов в Google Таблицы...`);
-      
-      for (let i = 0; i < selectedArticles.length; i++) {
+      for (let i = 0; i < Math.min(selectedArticles.length, 10); i++) {
         const article = selectedArticles[i];
-        
-        // Определяем категорию
-        let category = 'Общее';
         const text = (article.title + ' ' + article.snippet).toLowerCase();
         
-        if (text.includes('getcourse') || text.includes('геткурс')) {
-          category = 'GetCourse';
-        } else if (text.includes('prodamus') || text.includes('продамус')) {
-          category = 'Prodamus';
-        } else if (text.includes('landing') || text.includes('лендинг') || text.includes('tilda')) {
-          category = 'Лендинги';
-        } else if (text.includes('личный кабинет') || text.includes('кабинет')) {
-          category = 'Личный кабинет';
-        } else if (text.includes('кастом') || text.includes('дизайн')) {
-          category = 'Дизайн';
-        } else if (text.includes('script') || text.includes('скрипт') || text.includes('javascript')) {
-          category = 'Скрипты';
-        } else if (text.includes('бот') || text.includes('telegram')) {
-          category = 'Боты';
-        } else if (text.includes('автоматизац') || text.includes('api')) {
-          category = 'Автоматизация';
-        } else if (text.includes('email') || text.includes('рассылк')) {
-          category = 'Email';
-        } else if (text.includes('платеж') || text.includes('оплат')) {
-          category = 'Платежи';
-        } else if (article.type === '🎥 Видео') {
-          category = 'Видео';
-        } else {
-          category = 'Разработка';
-        }
+        let category = 'Разработка';
+        if (text.includes('getcourse')) category = 'GetCourse';
+        else if (text.includes('prodamus')) category = 'Prodamus';
+        else if (text.includes('landing') || text.includes('лендинг')) category = 'Лендинги';
+        else if (text.includes('кабинет')) category = 'Личный кабинет';
+        else if (text.includes('дизайн')) category = 'Дизайн';
+        else if (text.includes('скрипт') || text.includes('javascript')) category = 'Скрипты';
+        else if (text.includes('бот')) category = 'Боты';
+        else if (text.includes('api')) category = 'Автоматизация';
         
-        try {
-          await addToSheet({
-            date: article.dateFormatted,
-            source: article.source,
-            title: article.title,
-            url: article.link,
-            keywords: 'getcourse, prodamus, веб-разработка, автоматизация',
-            category: category,
-            analysis: article.snippet.substring(0, 200),
-            idea: 'Изучить для применения'
-          });
-          
-          console.log(`💾 ${i + 1}/${selectedArticles.length}: [${category}] ${article.title.substring(0, 40)}...`);
-        } catch (sheetError) {
-          console.log(`❌ Ошибка сохранения ${i + 1}: ${sheetError.message}`);
-        }
+        await addToSheet({
+          date: article.dateFormatted,
+          source: article.source,
+          title: article.title,
+          url: article.link,
+          keywords: 'getcourse, prodamus, автоматизация',
+          category: category,
+          analysis: article.snippet.substring(0, 200),
+          idea: 'Из дайджеста'
+        });
       }
-      
-      console.log('✅ Сохранено в Google Таблицы!');
-      
-    } catch (error) {
-      console.log(`❌ Ошибка Google Sheets: ${error.message}`);
+      console.log('✅ Сохранено в Google Sheets');
+    } catch (err) {
+      console.log('⚠️ Ошибка Google Sheets:', err.message);
     }
     
   } catch (error) {
-    console.error('❌ Критическая ошибка:', error);
+    console.error('❌ Ошибка дайджеста:', error);
     await bot.sendMessage(CHANNEL_ID, '❌ Ошибка при создании дайджеста.');
   }
 }
@@ -409,7 +304,7 @@ async function generateIdeas() {
 Для каждой идеи:
 1. **Название** (конкретное, с цифрами)
 2. **Формат** (пост/видео/кейс)
-3. **Польза** (какой результат получит читатель)
+3. **Польза** (результат для читателя)
 
 Максимум 1200 символов. ТОЛЬКО НА РУССКОМ.`;
 
@@ -432,21 +327,25 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, 
     `👋 Привет! Я AI-помощник по автоматизации GetCourse и Prodamus.XL.
 
-**Что я умею:**
-✅ Собираю дайджесты (GetCourse, Prodamus, лендинги, автоматизация)
-✅ Генерирую идеи контента
-✅ Сохраняю материалы в базу знаний
-
 **Команды:**
-/digest - дайджест за неделю
-/ideas - идеи контента
-/stats - статистика базы
+/digest - дайджест материалов сейчас
+/ideas - сгенерировать 5 идей для контента
+/stats - статистика базы материалов  
+/analyze [URL] - проанализировать статью или лендинг
+/search [слово] - поиск в базе знаний (например: /search getcourse)
 
 **Автоматически:**
-📅 Каждый день в 9:00 - дайджест
-💡 Каждый понедельник в 10:00 - идеи
+📅 Каждый день в 9:00 - дайджест по GetCourse, Prodamus.XL и автоматизации
+💡 Каждый понедельник в 10:00 - идеи контента на неделю
+📊 Всё сохраняется в Google Таблицу для аналитики
 
-🚀 Perplexity AI + Google Sheets`
+**Тематика:**
+• Автоматизация GetCourse и Prodamus.XL
+• Кастомизация личных кабинетов
+• Создание лендингов и продающих сайтов
+• Скрипты для онлайн-платформ
+
+🚀 Работаю на Perplexity AI + Google Sheets`
   );
 });
 
@@ -474,19 +373,32 @@ bot.onText(/\/stats/, async (msg) => {
     }
     
     const categories = {};
+    const sources = {};
+    
     allData.forEach(row => {
       const cat = row.category || 'Без категории';
+      const src = row.source || 'Неизвестно';
+      
       categories[cat] = (categories[cat] || 0) + 1;
+      sources[src] = (sources[src] || 0) + 1;
     });
     
     let stats = `📊 СТАТИСТИКА БАЗЫ ЗНАНИЙ\n\n`;
-    stats += `📚 Всего: ${allData.length}\n\n`;
-    stats += `**По категориям:**\n`;
+    stats += `📚 Всего материалов: ${allData.length}\n\n`;
     
+    stats += `**По категориям:**\n`;
     Object.entries(categories)
       .sort((a, b) => b[1] - a[1])
       .forEach(([cat, count]) => {
         stats += `• ${cat}: ${count}\n`;
+      });
+    
+    stats += `\n**По источникам (топ-5):**\n`;
+    Object.entries(sources)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .forEach(([src, count]) => {
+        stats += `• ${src}: ${count}\n`;
       });
     
     await bot.sendMessage(msg.chat.id, stats, { parse_mode: 'Markdown' });
@@ -496,26 +408,134 @@ bot.onText(/\/stats/, async (msg) => {
   }
 });
 
-// ========== РАСПИСАНИЕ ==========
-// Якутск = UTC+9, значит вычитаем 9 часов
+// ========== КОМАНДА /ANALYZE ==========
+bot.onText(/\/analyze (.+)/, async (msg, match) => {
+  const url = match[1];
+  const chatId = msg.chat.id;
+  
+  await bot.sendMessage(chatId, '🔍 Анализирую статью...');
+  
+  try {
+    const response = await axios.get(url, { timeout: 10000 });
+    const html = response.data;
+    
+    let text = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .substring(0, 3000);
+    
+    if (!text || text.length < 100) {
+      await bot.sendMessage(chatId, '❌ Не удалось извлечь текст статьи.');
+      return;
+    }
+    
+    const prompt = `Проанализируй эту статью для онлайн-школ/GetCourse/Prodamus:
 
-// Дайджест каждый день в 9:00 Якутск = 00:00 UTC
+URL: ${url}
+
+ТЕКСТ:
+${text}
+
+ЗАДАЧА:
+1. **Главная идея** (1-2 предложения)
+2. **Применение для GetCourse/Prodamus** (конкретные действия)
+3. **Ключевые инсайты** (3-5 пунктов)
+4. **Идеи контента** (2-3 идеи для постов/видео)
+
+Формат: краткий, структурированный, НА РУССКОМ, максимум 800 символов.`;
+
+    const analysis = await askPerplexity(prompt);
+    
+    const result = `📊 АНАЛИЗ СТАТЬИ\n\n${analysis}\n\n🔗 ${url}`;
+    
+    await bot.sendMessage(chatId, result, {
+      parse_mode: 'Markdown',
+      disable_web_page_preview: false
+    });
+    
+    try {
+      await addToSheet({
+        date: new Date().toLocaleDateString('ru-RU'),
+        source: 'Manual Analysis',
+        title: 'Анализ статьи',
+        url: url,
+        keywords: 'анализ, getcourse, prodamus',
+        category: 'Анализ',
+        analysis: analysis.substring(0, 200),
+        idea: 'Проанализировано вручную'
+      });
+      
+      await bot.sendMessage(chatId, '✅ Анализ сохранен в Google Таблицы!');
+    } catch (err) {
+      console.log('⚠️ Не удалось сохранить:', err.message);
+    }
+    
+    console.log(`✅ Анализ: ${url}`);
+    
+  } catch (error) {
+    console.error('❌ Ошибка анализа:', error.message);
+    await bot.sendMessage(chatId, `❌ Ошибка: ${error.message}`);
+  }
+});
+
+// ========== КОМАНДА /SEARCH ==========
+bot.onText(/\/search (.+)/, async (msg, match) => {
+  const query = match[1];
+  const chatId = msg.chat.id;
+  
+  await bot.sendMessage(chatId, `🔍 Ищу "${query}" в базе знаний...`);
+  
+  try {
+    const results = await searchInSheet(query);
+    
+    if (!results || results.length === 0) {
+      await bot.sendMessage(chatId, `❌ Ничего не найдено по запросу "${query}"`);
+      return;
+    }
+    
+    let response = `🔍 РЕЗУЛЬТАТЫ ПОИСКА: "${query}"\n\n`;
+    response += `Найдено: ${results.length}\n\n`;
+    
+    results.slice(0, 10).forEach((item, idx) => {
+      response += `${idx + 1}. **${item.title}**\n`;
+      response += `   📂 ${item.category} | 📅 ${item.date}\n`;
+      response += `   🔗 ${item.url}\n\n`;
+    });
+    
+    if (results.length > 10) {
+      response += `\n... и еще ${results.length - 10} результатов`;
+    }
+    
+    await bot.sendMessage(chatId, response, {
+      parse_mode: 'Markdown',
+      disable_web_page_preview: true
+    });
+    
+    console.log(`✅ Поиск "${query}": найдено ${results.length}`);
+    
+  } catch (error) {
+    console.error('❌ Ошибка поиска:', error.message);
+    await bot.sendMessage(chatId, '❌ Ошибка поиска: ' + error.message);
+  }
+});
+
+// ========== РАСПИСАНИЕ ==========
 cron.schedule('0 0 * * *', () => {
   console.log('⏰ Дайджест (9:00 Якутск)');
   dailyDigest();
 });
 
-// Идеи каждый понедельник в 10:00 Якутск = 01:00 UTC
 cron.schedule('0 1 * * 1', () => {
   console.log('⏰ Идеи (10:00 понедельник Якутск)');
   generateIdeas();
 });
 
-console.log('📅 Расписание:');
-console.log('  - Дайджест: каждый день 9:00 Якутск (00:00 UTC)');
-console.log('  - Идеи: понедельник 10:00 Якутск (01:00 UTC)');
+console.log('📅 Расписание: дайджест 9:00, идеи понедельник 10:00 (Якутск)');
 
-// ========== EXPRESS СЕРВЕР ==========
+// ========== EXPRESS ==========
 const app = express();
 app.use(express.json());
 
