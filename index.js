@@ -500,7 +500,7 @@ cron.schedule('* * * * *', () => {
   const yakutskTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
   console.log(`⏰ ТЕСТ! UTC: ${utcTime}, Якутск: ${yakutskTime.toLocaleString('ru-RU', { timeZone: 'Asia/Yakutsk' })}`);
   // Раскомментируйте для отправки дайджеста:
-  // dailyDigest();
+   dailyDigest();
 });
 
 // Дайджест каждый день в 9:00 по Якутску (00:00 UTC)
