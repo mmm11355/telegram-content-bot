@@ -53,7 +53,7 @@ async function askPerplexity(prompt) {
     const response = await axios.post(
       'https://api.perplexity.ai/chat/completions',
       {
-        model: 'llama-3.1-sonar-small-128k-chat',
+        model: 'sonar',
         messages: [
           {
             role: 'system',
