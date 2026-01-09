@@ -26,6 +26,17 @@ const RSS_SOURCES = {
   'Habr': 'https://habr.com/ru/rss/all/all/',
   'Habr Веб-разработка': 'https://habr.com/ru/rss/hub/webdev/all/',
   'Cossa': 'https://www.cossa.ru/rss/',
+
+ 'TG: sites_layout': 'https://rsshub.app/telegram/channel/sites_layout',
+ 'TG: getcourse_update_blog': 'https://rsshub.app/telegram/channel/getcourse_update_blog',
+ 'TG: help0340ru': 'https://rsshub.app/telegram/channel/help0340ru',
+ 'TG: getstart_pro': 'https://rsshub.app/telegram/channel/getstart_pro',
+ 'TG: designGC': 'https://rsshub.app/telegram/channel/designGC',
+ 'TG: onewaydev': 'https://rsshub.app/telegram/channel/onewaydev',
+ 'TG: GetCourseProfi': 'https://rsshub.app/telegram/channel/GetCourseProfi',
+ 'TG: headjek_xl': 'https://rsshub.app/telegram/channel/headjek_xl',
+ 'TG: tatyankati_botaxl': 'https://rsshub.app/telegram/channel/tatyankati_botaxl',
+ 'TG: slowcountry': 'https://rsshub.app/telegram/channel/slowcountry',
   
   // YouTube каналы (добавляйте свои)
   'YouTube: Владилен Минин': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCg8ss4xW9jASrqWGP30jXiw',
@@ -161,19 +172,19 @@ async function dailyDigest() {
       'лендинг', 'landing', 'сайт', 'веб-дизайн',
       'tilda', 'тильда', 'конструктор',
       'личный кабинет', 'лк', 'кабинет',
-      'кастомизац', 'кастом', 'настройк',
+      'кастомизация', 'кастом', 'настройка',
       'скрипт', 'javascript', 'js', 'код',
-      'автоматизац', 'авто', 'интеграц',
-      'платеж', 'оплат', 'payment',
+      'автоматизац', 'авто', 'интеграция',
+      'платежи', 'оплат', 'payment',
       'email', 'рассылк', 'письм',
-      'воронк', 'funnel', 'продаж',
+      'воронки', 'funnel', 'продажи',
       'crm', 'amocrm', 'битрикс',
       'webhook', 'api', 'rest',
       'дизайн', 'ui', 'ux', 'interface',
-      'вебинар', 'обучени', 'edtech',
+      'вебинар', 'обучение', 'edtech',
       'чат-бот', 'бот', 'telegram', 'телеграм',
-      'nps', 'аналитик', 'метрик',
-      'a/b тест', 'конверси', 'трафик',
+      'nps', 'аналитика', 'метрика',
+      'a/b тест', 'конверсия', 'трафик',
       'css', 'html', 'верстка', 'адаптив',
       'sms', 'уведомлен', 'триггер'
     ];
@@ -191,11 +202,21 @@ async function dailyDigest() {
     // Используем Perplexity для создания дайджеста
     const digestPrompt = `Ты эксперт по GetCourse, Prodamus.XL и автоматизации онлайн-школ.
 
-Из списка материалов выбери ТОП-3 САМЫХ ПОЛЕЗНЫХ для специалиста по GetCourse/Prodamus.
+Выбери 20 самых интересных материалов за последний день из списка ниже только по теме GetCourse, Prodamus.XL.
+Обязательно включи материалы из разных источников (Habr, VC.ru, Cossa, YouTube, TG).
+
+Из каждого источника выбери ТОП-3 самых интересных материала:
+- Habr: 3 материала
+- VC.ru: 3 материала
+- Cossa: 3 материала
+- YouTube: 3 материала
+- TG: 3 материала
+
+ИТОГО: 12-15 материалов из разных источников.
 
 ПРИОРИТЕТЫ:
 1. Автоматизация GetCourse и Prodamus.XL
-2. Лендинги и кастомизация (Tilda)
+2. Лендинги и кастомизация, оформление личного кабинета 
 3. Личные кабинеты и скрипты
 4. Платежи и интеграции
 5. Веб-разработка для онлайн-школ
