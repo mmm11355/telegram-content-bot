@@ -80,26 +80,30 @@ async function askPerplexity(prompt) {
     return response.data.choices[0].message.content;
   } catch (error) {
     console.error('❌ Ошибка Perplexity:', error.response?.status, error.response?.data || error.message);
-    throw error;
+    throw new Error('Ошибка API Perplexity. Проверьте ключ и баланс.');
   }
 }
 
 // ========== ДАЙДЖЕСТ ==========
-async function dailyDigest() {
+async function dailyDigest(targetChatId = null) {
   console.log('📊 Создаю дайджест...');
+  
+  const chatId = targetChatId || CHANNEL_ID;
   
   try {
     const lastDigestTime = global.lastDigestTime || 0;
     const now = Date.now();
     const hourInMs = 60 * 60 * 1000;
 
-    if (now - lastDigestTime < hourInMs) {
+    if (now - lastDigestTime < hourInMs && !targetChatId) {
       console.log('⏳ Слишком частые запросы.');
-      await bot.sendMessage(CHANNEL_ID, '⏳ Дайджест можно создавать раз в час.');
+      await bot.sendMessage(chatId, '⏳ Дайджест можно создавать раз в час.');
       return;
     }
 
-    global.lastDigestTime = now;
+    if (!targetChatId) {
+      global.lastDigestTime = now;
+    }
     
     const allArticles = [];
     const weekAgo = new Date();
@@ -147,7 +151,7 @@ async function dailyDigest() {
     
     if (allArticles.length === 0) {
       console.log('⚠️ Нет свежих материалов');
-      await bot.sendMessage(CHANNEL_ID, '❌ Нет новых материалов за неделю.');
+      await bot.sendMessage(chatId, '❌ Нет новых материалов за неделю.');
       return;
     }
     
@@ -184,7 +188,7 @@ async function dailyDigest() {
     }
     
     if (relevantArticles.length === 0) {
-      await bot.sendMessage(CHANNEL_ID, '❌ Нет материалов по вашей теме.');
+      await bot.sendMessage(chatId, '❌ Нет материалов по вашей теме.');
       return;
     }
     
@@ -241,7 +245,7 @@ async function dailyDigest() {
     if (currentMessage) messages.push(currentMessage);
     
     for (const msg of messages) {
-      await bot.sendMessage(CHANNEL_ID, msg, {
+      await bot.sendMessage(chatId, msg, {
         parse_mode: 'Markdown',
         disable_web_page_preview: true
       });
@@ -249,47 +253,51 @@ async function dailyDigest() {
     
     console.log('✅ Дайджест опубликован!');
     
-    // Сохранение в Google Sheets
-    try {
-      for (let i = 0; i < Math.min(selectedArticles.length, 10); i++) {
-        const article = selectedArticles[i];
-        const text = (article.title + ' ' + article.snippet).toLowerCase();
-        
-        let category = 'Разработка';
-        if (text.includes('getcourse')) category = 'GetCourse';
-        else if (text.includes('prodamus')) category = 'Prodamus';
-        else if (text.includes('landing') || text.includes('лендинг')) category = 'Лендинги';
-        else if (text.includes('кабинет')) category = 'Личный кабинет';
-        else if (text.includes('дизайн')) category = 'Дизайн';
-        else if (text.includes('скрипт') || text.includes('javascript')) category = 'Скрипты';
-        else if (text.includes('бот')) category = 'Боты';
-        else if (text.includes('api')) category = 'Автоматизация';
-        
-        await addToSheet({
-          date: article.dateFormatted,
-          source: article.source,
-          title: article.title,
-          url: article.link,
-          keywords: 'getcourse, prodamus, автоматизация',
-          category: category,
-          analysis: article.snippet.substring(0, 200),
-          idea: 'Из дайджеста'
-        });
+    // Сохранение в Google Sheets (только для автоматических дайджестов)
+    if (!targetChatId) {
+      try {
+        for (let i = 0; i < Math.min(selectedArticles.length, 10); i++) {
+          const article = selectedArticles[i];
+          const text = (article.title + ' ' + article.snippet).toLowerCase();
+          
+          let category = 'Разработка';
+          if (text.includes('getcourse')) category = 'GetCourse';
+          else if (text.includes('prodamus')) category = 'Prodamus';
+          else if (text.includes('landing') || text.includes('лендинг')) category = 'Лендинги';
+          else if (text.includes('кабинет')) category = 'Личный кабинет';
+          else if (text.includes('дизайн')) category = 'Дизайн';
+          else if (text.includes('скрипт') || text.includes('javascript')) category = 'Скрипты';
+          else if (text.includes('бот')) category = 'Боты';
+          else if (text.includes('api')) category = 'Автоматизация';
+          
+          await addToSheet({
+            date: article.dateFormatted,
+            source: article.source,
+            title: article.title,
+            url: article.link,
+            keywords: 'getcourse, prodamus, автоматизация',
+            category: category,
+            analysis: article.snippet.substring(0, 200),
+            idea: 'Из дайджеста'
+          });
+        }
+        console.log('✅ Сохранено в Google Sheets');
+      } catch (err) {
+        console.log('⚠️ Ошибка Google Sheets:', err.message);
       }
-      console.log('✅ Сохранено в Google Sheets');
-    } catch (err) {
-      console.log('⚠️ Ошибка Google Sheets:', err.message);
     }
     
   } catch (error) {
     console.error('❌ Ошибка дайджеста:', error);
-    await bot.sendMessage(CHANNEL_ID, '❌ Ошибка при создании дайджеста.');
+    await bot.sendMessage(chatId, '❌ Ошибка при создании дайджеста: ' + error.message);
   }
 }
 
 // ========== ГЕНЕРАЦИЯ ИДЕЙ ==========
-async function generateIdeas() {
+async function generateIdeas(targetChatId = null) {
   console.log('💡 Генерирую идеи...');
+  
+  const chatId = targetChatId || CHANNEL_ID;
   
   try {
     const prompt = `Сгенерируй 5 идей для постов/видео на неделю:
@@ -310,7 +318,7 @@ async function generateIdeas() {
 
     const ideas = await askPerplexity(prompt);
     
-    await bot.sendMessage(CHANNEL_ID, `💡 ИДЕИ КОНТЕНТА НА НЕДЕЛЮ\n\n${ideas}`, {
+    await bot.sendMessage(chatId, `💡 ИДЕИ КОНТЕНТА НА НЕДЕЛЮ\n\n${ideas}`, {
       parse_mode: 'Markdown'
     });
     
@@ -318,7 +326,7 @@ async function generateIdeas() {
     
   } catch (error) {
     console.error('❌ Ошибка генерации идей:', error.message);
-    await bot.sendMessage(CHANNEL_ID, '❌ Ошибка при генерации идей.');
+    await bot.sendMessage(chatId, '❌ Ошибка генерации идей: ' + error.message);
   }
 }
 
@@ -332,12 +340,16 @@ bot.onText(/\/start/, (msg) => {
 /ideas - сгенерировать 5 идей для контента
 /stats - статистика базы материалов  
 /analyze [URL] - проанализировать статью или лендинг
-/search [слово] - поиск в базе знаний (например: /search getcourse)
+/search [слово] - поиск в базе знаний
+
+**Примеры:**
+• /analyze https://www.cossa.ru/trends/346066/
+• /search getcourse
 
 **Автоматически:**
-📅 Каждый день в 9:00 - дайджест по GetCourse, Prodamus.XL и автоматизации
-💡 Каждый понедельник в 10:00 - идеи контента на неделю
-📊 Всё сохраняется в Google Таблицу для аналитики
+📅 Каждый день в 9:00 - дайджест
+💡 Каждый понедельник в 10:00 - идеи контента
+📊 Всё сохраняется в Google Таблицу
 
 **Тематика:**
 • Автоматизация GetCourse и Prodamus.XL
@@ -345,30 +357,31 @@ bot.onText(/\/start/, (msg) => {
 • Создание лендингов и продающих сайтов
 • Скрипты для онлайн-платформ
 
-🚀 Работаю на Perplexity AI + Google Sheets`
+🚀 Powered by Perplexity AI`
   );
 });
 
 bot.onText(/\/digest/, async (msg) => {
-  await bot.sendMessage(msg.chat.id, '⏳ Создаю дайджест...');
-  await dailyDigest();
-  await bot.sendMessage(msg.chat.id, '✅ Готово! Проверьте канал.');
+  const chatId = msg.chat.id;
+  await bot.sendMessage(chatId, '⏳ Создаю дайджест...');
+  await dailyDigest(chatId);
 });
 
 bot.onText(/\/ideas/, async (msg) => {
-  await bot.sendMessage(msg.chat.id, '⏳ Генерирую идеи...');
-  await generateIdeas();
-  await bot.sendMessage(msg.chat.id, '✅ Готово! Проверьте канал.');
+  const chatId = msg.chat.id;
+  await bot.sendMessage(chatId, '⏳ Генерирую идеи...');
+  await generateIdeas(chatId);
 });
 
 bot.onText(/\/stats/, async (msg) => {
-  await bot.sendMessage(msg.chat.id, '📊 Получаю статистику...');
+  const chatId = msg.chat.id;
+  await bot.sendMessage(chatId, '📊 Получаю статистику...');
   
   try {
     const allData = await getFromSheet();
     
     if (allData.length === 0) {
-      await bot.sendMessage(msg.chat.id, '❌ База пуста.');
+      await bot.sendMessage(chatId, '❌ База пуста.');
       return;
     }
     
@@ -401,14 +414,14 @@ bot.onText(/\/stats/, async (msg) => {
         stats += `• ${src}: ${count}\n`;
       });
     
-    await bot.sendMessage(msg.chat.id, stats, { parse_mode: 'Markdown' });
+    await bot.sendMessage(chatId, stats, { parse_mode: 'Markdown' });
     
   } catch (error) {
-    await bot.sendMessage(msg.chat.id, '❌ Ошибка: ' + error.message);
+    console.error('❌ Ошибка stats:', error);
+    await bot.sendMessage(chatId, '❌ Ошибка: ' + error.message);
   }
 });
 
-// ========== КОМАНДА /ANALYZE ==========
 bot.onText(/\/analyze (.+)/, async (msg, match) => {
   const url = match[1];
   const chatId = msg.chat.id;
@@ -416,7 +429,12 @@ bot.onText(/\/analyze (.+)/, async (msg, match) => {
   await bot.sendMessage(chatId, '🔍 Анализирую статью...');
   
   try {
-    const response = await axios.get(url, { timeout: 10000 });
+    const response = await axios.get(url, { 
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
     const html = response.data;
     
     let text = html
@@ -481,7 +499,6 @@ ${text}
   }
 });
 
-// ========== КОМАНДА /SEARCH ==========
 bot.onText(/\/search (.+)/, async (msg, match) => {
   const query = match[1];
   const chatId = msg.chat.id;
@@ -523,17 +540,21 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
 });
 
 // ========== РАСПИСАНИЕ ==========
+// Дайджест каждый день в 9:00 Якутск (00:00 UTC)
 cron.schedule('0 0 * * *', () => {
-  console.log('⏰ Дайджест (9:00 Якутск)');
+  console.log('⏰ Автопостинг: Дайджест (9:00 Якутск)');
   dailyDigest();
 });
 
+// Идеи каждый понедельник в 10:00 Якутск (01:00 UTC)
 cron.schedule('0 1 * * 1', () => {
-  console.log('⏰ Идеи (10:00 понедельник Якутск)');
+  console.log('⏰ Автопостинг: Идеи (10:00 понедельник Якутск)');
   generateIdeas();
 });
 
-console.log('📅 Расписание: дайджест 9:00, идеи понедельник 10:00 (Якутск)');
+console.log('📅 Расписание активно:');
+console.log('  - Дайджест: каждый день 9:00 Якутск');
+console.log('  - Идеи: понедельник 10:00 Якутск');
 
 // ========== EXPRESS ==========
 const app = express();
@@ -561,10 +582,10 @@ app.listen(PORT, () => {
   
   bot.setWebHook(WEBHOOK_URL)
     .then(() => {
-      console.log('✅ Webhook:', WEBHOOK_URL);
-      console.log('🤖 Бот запущен!');
+      console.log('✅ Webhook установлен:', WEBHOOK_URL);
+      console.log('🤖 Бот полностью запущен!');
     })
     .catch((err) => {
-      console.error('❌ Webhook error:', err.message);
+      console.error('❌ Webhook ошибка:', err.message);
     });
 });
