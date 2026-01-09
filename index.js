@@ -487,21 +487,34 @@ bot.onText(/\/stats/, async (msg) => {
   }
 });
 
-// Расписание: каждый день в 9:00 (время Якутска)
-cron.schedule('35 1 * * *', () => { // через 5 минут
-  console.log('⏰ ТЕСТ дайджеста...');
-  dailyDigest();
-}, {
-  timezone: "Asia/Yakutsk"
+// ============================================
+// РАСПИСАНИЕ АВТОМАТИЧЕСКИХ ЗАДАЧ
+// ============================================
+// Render работает в UTC, Якутск = UTC+9
+// Формула: UTC = Якутск - 9 часов
+
+// ТЕСТ: Каждую минуту (УДАЛИТЕ ПОСЛЕ ПРОВЕРКИ!)
+cron.schedule('* * * * *', () => {
+  const now = new Date();
+  const utcTime = now.toISOString();
+  const yakutskTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  console.log(`⏰ ТЕСТ! UTC: ${utcTime}, Якутск: ${yakutskTime.toLocaleString('ru-RU', { timeZone: 'Asia/Yakutsk' })}`);
+  // Раскомментируйте для отправки дайджеста:
+  // dailyDigest();
 });
 
-// Расписание: каждый понедельник в 10:00
-cron.schedule('0 2 * * 1', () => {
-  console.log('⏰ Генерирую идеи контента на неделю...');
-  generateIdeas();
-}, {
-  timezone: "Asia/Yakutsk"
-});
+// Дайджест каждый день в 9:00 по Якутску (00:00 UTC)
+// cron.schedule('0 0 * * *', () => {
+//   console.log('⏰ Запуск ежедневного дайджеста (9:00 Якутск / 00:00 UTC)');
+//   dailyDigest();
+// });
+
+// Идеи каждый понедельник в 10:00 по Якутску (01:00 UTC)
+// cron.schedule('0 1 * * 1', () => {
+//   console.log('⏰ Генерация идей на неделю (10:00 понедельник Якутск / 01:00 UTC)');
+//   generateIdeas();
+// });
+
 
 const app = express();
 
