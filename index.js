@@ -488,8 +488,8 @@ bot.onText(/\/stats/, async (msg) => {
 });
 
 // Расписание: каждый день в 9:00 (время Якутска)
-cron.schedule('0 1 * * *', () => {
-  console.log('⏰ Запуск ежедневного дайджеста...');
+cron.schedule('35 1 * * *', () => { // через 5 минут
+  console.log('⏰ ТЕСТ дайджеста...');
   dailyDigest();
 }, {
   timezone: "Asia/Yakutsk"
