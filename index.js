@@ -43,9 +43,10 @@ const RSS_SOURCES = {
   'YouTube: Владилен Минин': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCg8ss4xW9jASrqWGP30jXiw',
   'YouTube: Гоша Дударь': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCvuY904el7JvBlPbdqbfguw',
   'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
+  'YouTube: Анна Блок': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCn5wduCq2Mus0v85QZn9IaA',
 };
 
-// Perplexity API
+// ========== PERPLEXITY API ==========
 async function askPerplexity(prompt) {
   try {
     const response = await axios.post(
@@ -150,41 +151,136 @@ async function dailyDigest() {
       return;
     }
     
+    console.log(`📊 Всего спарсено: ${allArticles.length}`);
+    
+    // ========== ФИЛЬТРАЦИЯ ПО ВАШЕЙ ТЕМЕ ==========
+    const keywords = [
+      // GetCourse
+      'getcourse', 'геткурс', 'гет курс', 'гк', 'get course',
+      
+      // Prodamus
+      'prodamus', 'продамус', 'продамуса', 'xl', 'prodamus.xl',
+      
+      // Онлайн-школы и курсы
+      'онлайн-школ', 'онлайн школ', 'онлайн-курс', 'онлайн курс',
+      'edtech', 'образовательн', 'обучающ', 'курс', 'школ',
+      
+      // Лендинги и конструкторы
+      'лендинг', 'landing', 'посадочн', 'одностраничник',
+      'tilda', 'тильда', 'конструктор сайт', 'landing page', 'создать сайт',
+      
+      // Личный кабинет
+      'личный кабинет', 'лк', 'кабинет', 'dashboard',
+      'кастомизация кабинет', 'настройка кабинет', 'оформление личного кабинета',
+      
+      // Кастомизация и дизайн
+      'кастомизац', 'кастом', 'персонализац',
+      'дизайн сайт', 'ui/ux', 'интерфейс',
+      'брендинг', 'оформлен',
+      
+      // Скрипты и разработка
+      'javascript', 'js код', 'скрипт для сайт',
+      'вебхук', 'webhook', 'api интеграц',
+      'автоматизац', 'интеграц',
+      
+      // Email и рассылки
+      'email', 'имейл', 'рассылк', 'письм',
+      'триггер', 'автоответчик', 'цепочк писем',
+      
+       // Аналитика
+      'аналитика онлайн', 'метрика', 'яндекс.метрика',
+      'google analytics', 'конверсия', 'a/b тест',
+      
+      // Веб-разработка для онлайн-бизнеса
+      'веб-сервис', 'saas', 'веб-приложен',
+      'rest api', 'backend для курс',
+      
+      // Маркетинг онлайн-школ
+        'продвижение онлайн', 'маркетинг edtech'
+    ];
+    
+    const relevantArticles = allArticles.filter(article => {
+      const text = (article.title + ' ' + article.snippet).toLowerCase();
+      
+      // Проверяем, есть ли хотя бы одно ключевое слово
+      const isRelevant = keywords.some(keyword => text.includes(keyword.toLowerCase()));
+      
+      if (isRelevant) {
+        console.log(`✅ Релевантно [${article.source}]: ${article.title.substring(0, 50)}...`);
+      }
+      
+      return isRelevant;
+    });
+    
+    console.log(`🎯 Релевантных материалов: ${relevantArticles.length} из ${allArticles.length}`);
+    
+    // Если релевантных очень мало - расширяем поиск
+    if (relevantArticles.length < 5) {
+      console.log('⚠️ Мало релевантных материалов, добавляю смежные темы...');
+      
+      const softKeywords = [
+        'веб-разработка', 'frontend', 'backend', 'fullstack',
+        'css', 'html', 'верстка', 'адаптив',
+        'дизайн', 'ui', 'ux', 'figma',
+       
+      ];
+      
+      const additionalArticles = allArticles.filter(article => {
+        if (relevantArticles.includes(article)) return false;
+        
+        const text = (article.title + ' ' + article.snippet).toLowerCase();
+        return softKeywords.some(keyword => text.includes(keyword.toLowerCase()));
+      });
+      
+      relevantArticles.push(...additionalArticles.slice(0, 10));
+      console.log(`➕ Добавлено ${additionalArticles.slice(0, 10).length} смежных материалов`);
+    }
+    
+    if (relevantArticles.length === 0) {
+      console.log('❌ Нет материалов по вашей теме');
+      await bot.sendMessage(CHANNEL_ID, 
+        `❌ За последнюю неделю нет материалов по темам:\n` +
+        `• GetCourse, Prodamus.XL\n` +
+        `• Лендинги и онлайн-школы\n` +
+        `• Кастомизация и автоматизация\n\n` +
+        `Попробуйте позже!`
+      );
+      return;
+    }
+    
     // Сортировка по дате
-    allArticles.sort((a, b) => {
+    relevantArticles.sort((a, b) => {
       const dateA = a.pubDate ? new Date(a.pubDate) : new Date(0);
       const dateB = b.pubDate ? new Date(b.pubDate) : new Date(0);
       return dateB - dateA;
     });
     
-    console.log(`📊 Всего материалов: ${allArticles.length}`);
-    
     // ========== ГРУППИРОВКА ПО ИСТОЧНИКАМ ==========
     const bySource = {};
-    allArticles.forEach(article => {
+    relevantArticles.forEach(article => {
       if (!bySource[article.source]) {
         bySource[article.source] = [];
       }
       bySource[article.source].push(article);
     });
     
-    // Берем ТОП-3 из каждого источника
+    // Берем ТОП-3 из каждого источника (только релевантных!)
     const selectedArticles = [];
     
     Object.keys(bySource).forEach(source => {
       const top3 = bySource[source].slice(0, 3);
       selectedArticles.push(...top3);
-      console.log(`📌 ${source}: взято ${top3.length} материалов`);
+      console.log(`📌 ${source}: взято ${top3.length} релевантных материалов`);
     });
     
-    console.log(`✅ Итого отобрано: ${selectedArticles.length} материалов`);
+    console.log(`✅ Итого отобрано: ${selectedArticles.length} релевантных материалов`);
     
     // ========== ФОРМИРОВАНИЕ ДАЙДЖЕСТА ==========
     let digest = `📰 ДАЙДЖЕСТ: GetCourse и Prodamus.XL\n`;
     digest += `📅 ${weekAgo.toLocaleDateString('ru-RU')} - ${new Date().toLocaleDateString('ru-RU')}\n\n`;
     digest += `**Материалы по вашим темам (${selectedArticles.length}):**\n\n`;
     
-    // Группируем по источникам для красивого отображения
+    // Группируем по источникам для отображения
     const groupedForDisplay = {};
     selectedArticles.forEach(article => {
       if (!groupedForDisplay[article.source]) {
@@ -203,7 +299,6 @@ async function dailyDigest() {
     });
     
     // ========== ОТПРАВКА В TELEGRAM ==========
-    // Разбиваем на части, если слишком длинный
     const maxLength = 4000;
     const messages = [];
     let currentMessage = '';
@@ -257,6 +352,10 @@ async function dailyDigest() {
           category = 'Боты';
         } else if (text.includes('автоматизац') || text.includes('api')) {
           category = 'Автоматизация';
+        } else if (text.includes('email') || text.includes('рассылк')) {
+          category = 'Email';
+        } else if (text.includes('платеж') || text.includes('оплат')) {
+          category = 'Платежи';
         } else if (article.type === '🎥 Видео') {
           category = 'Видео';
         } else {
