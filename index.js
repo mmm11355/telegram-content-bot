@@ -11,7 +11,14 @@ const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 const CHANNEL_ID = process.env.CHANNEL_ID;
 
 const bot = new TelegramBot(TELEGRAM_TOKEN);
-const parser = new Parser();
+
+// ========== ПАРСЕР С USER-AGENT ==========
+const parser = new Parser({
+  timeout: 15000,
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  }
+});
 
 const PORT = process.env.PORT || 10000;
 const WEBHOOK_URL = process.env.RENDER_EXTERNAL_URL 
@@ -22,21 +29,28 @@ console.log('🤖 Бот запущен!');
 
 // ========== RSS ИСТОЧНИКИ ==========
 const RSS_SOURCES = {
-  // Основные новости
+  // ========== ОСНОВНЫЕ НОВОСТИ ==========
   'VC.ru': 'https://vc.ru/rss',
   'Habr': 'https://habr.com/ru/rss/all/all/',
   'Habr Веб-разработка': 'https://habr.com/ru/rss/hub/webdev/all/',
   'Cossa': 'https://www.cossa.ru/rss/',
+  'RB.ru': 'https://rb.ru/feeds/all/',
   
-  // ========== ДЗЕН ПО ТЕМАТИКАМ ==========
-  'Дзен: Онлайн-образование': 'https://dzen.ru/news/rubric/online_education/rss',
-  'Дзен: Бизнес': 'https://dzen.ru/news/rubric/business/rss',
-  'Дзен: Технологии': 'https://dzen.ru/news/rubric/computers/rss',
-  'Дзен: Маркетинг': 'https://dzen.ru/news/rubric/marketing/rss',
-  'Дзен: Интернет': 'https://dzen.ru/news/rubric/internet/rss',
-  'Дзен: Стартапы': 'https://dzen.ru/news/rubric/startups/rss',
-
-  // Telegram каналы
+  // ========== ЯНДЕКС.НОВОСТИ ==========
+  'Яндекс: Технологии': 'https://news.yandex.ru/computers.rss',
+  'Яндекс: Бизнес': 'https://news.yandex.ru/business.rss',
+  'Яндекс: Интернет': 'https://news.yandex.ru/internet.rss',
+  'Яндекс: Образование': 'https://news.yandex.ru/education.rss',
+  'Яндекс: Экономика': 'https://news.yandex.ru/economics.rss',
+  
+  // ========== GOOGLE NEWS ПО КЛЮЧЕВЫМ СЛОВАМ ==========
+  'Google News: GetCourse': 'https://news.google.com/rss/search?q=GetCourse&hl=ru&gl=RU&ceid=RU:ru',
+  'Google News: Prodamus': 'https://news.google.com/rss/search?q=Prodamus&hl=ru&gl=RU&ceid=RU:ru',
+  'Google News: онлайн-школа': 'https://news.google.com/rss/search?q=онлайн-школа+автоматизация&hl=ru&gl=RU&ceid=RU:ru',
+  'Google News: EdTech': 'https://news.google.com/rss/search?q=EdTech+Russia&hl=ru&gl=RU&ceid=RU:ru',
+  'Google News: Tilda': 'https://news.google.com/rss/search?q=Tilda+лендинг&hl=ru&gl=RU&ceid=RU:ru',
+  
+  // ========== TELEGRAM КАНАЛЫ ==========
   'TG: sites_layout': 'https://rsshub.app/telegram/channel/sites_layout',
   'TG: getcourse_update_blog': 'https://rsshub.app/telegram/channel/getcourse_update_blog',
   'TG: help0340ru': 'https://rsshub.app/telegram/channel/help0340ru',
@@ -48,12 +62,13 @@ const RSS_SOURCES = {
   'TG: tatyankati_botaxl': 'https://rsshub.app/telegram/channel/tatyankati_botaxl',
   'TG: slowcountry': 'https://rsshub.app/telegram/channel/slowcountry',
   
-  // YouTube RSS каналы (дополнительно к поиску)
+  // ========== YOUTUBE RSS КАНАЛЫ ==========
   'YouTube: Владилен Минин': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCg8ss4xW9jASrqWGP30jXiw',
   'YouTube: Гоша Дударь': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCvuY904el7JvBlPbdqbfguw',
   'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
   'YouTube: Анна Блок': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCn5wduCq2Mus0v85QZn9IaA',
 };
+
 
 // ========== ФИЛЬТРАЦИЯ ПО ТЕМАТИКЕ ==========
 
