@@ -21,11 +21,19 @@ console.log('🤖 Бот запущен!');
 
 // ========== RSS ИСТОЧНИКИ ==========
 const RSS_SOURCES = {
-   // Основные новости
+  // Основные новости
   'VC.ru': 'https://vc.ru/rss',
   'Habr': 'https://habr.com/ru/rss/all/all/',
   'Habr Веб-разработка': 'https://habr.com/ru/rss/hub/webdev/all/',
   'Cossa': 'https://www.cossa.ru/rss/',
+  
+  // ========== ДЗЕН ПО ТЕМАТИКАМ ==========
+  'Дзен: Онлайн-образование': 'https://dzen.ru/news/rubric/online_education/rss',
+  'Дзен: Бизнес': 'https://dzen.ru/news/rubric/business/rss',
+  'Дзен: Технологии': 'https://dzen.ru/news/rubric/computers/rss',
+  'Дзен: Маркетинг': 'https://dzen.ru/news/rubric/marketing/rss',
+  'Дзен: Интернет': 'https://dzen.ru/news/rubric/internet/rss',
+  'Дзен: Стартапы': 'https://dzen.ru/news/rubric/startups/rss',
 
   // Telegram каналы
   'TG: sites_layout': 'https://rsshub.app/telegram/channel/sites_layout',
@@ -46,6 +54,39 @@ const RSS_SOURCES = {
   'YouTube: Анна Блок': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCn5wduCq2Mus0v85QZn9IaA',
 };
 
+// ========== ФИЛЬТРАЦИЯ ПО ТЕМАТИКЕ ==========
+
+// ОБЯЗАТЕЛЬНЫЕ ключевые слова (хотя бы одно должно быть)
+const PRIMARY_KEYWORDS = [
+  'getcourse', 'геткурс', 'гк', 'get course',
+  'prodamus', 'продамус', 'prodamus.xl', 'продамус.хл',
+  'онлайн-школ', 'онлайн школ', 'школа онлайн',
+  'edtech', 'ed-tech', 'образовательн платформ',
+  'lms', 'система обучен'
+];
+
+// КОНТЕКСТНЫЕ ключевые слова (усиливают релевантность)
+const CONTEXT_KEYWORDS = [
+  'лендинг', 'landing', 'посадочн', 'tilda', 'тильда',
+  'личный кабинет', 'кабинет ученик', 'dashboard',
+  'кастомизац', 'персонализац', 'дизайн интерфейс',
+  'javascript', 'js', 'скрипт для сайт', 'код для сайт',
+  'webhook', 'api интеграц', 'автоматизац',
+   'подписк',
+  'email рассылк', 'триггер', 'автоответчик',
+  'crm', 'воронк продаж', 'лидогенерац',
+  'чат-бот', 'telegram бот', 'автоматизация бот',
+  'аналитика онлайн', 'метрика', 'конверсия',
+  'веб-разработк', 'код', 'backend', 'оформление', 'скрипт'
+];
+
+// ИСКЛЮЧЕНИЯ (НЕ показывать, даже если есть ключевые слова)
+const EXCLUDE_KEYWORDS = [
+  'вакансия', 'ищем', 'требуется', 'резюме',
+  'купить диплом', 'заработок без',
+  'форекс', 'крипто', 'трейдинг',
+  'казино', 'ставки', 'азартн'
+];
 
 // ========== PERPLEXITY API ==========
 async function askPerplexity(prompt) {
@@ -142,7 +183,7 @@ async function dailyDigest(targetChatId = null) {
           }));
         
         allArticles.push(...recentArticles);
-        console.log(`✅ Добавлено ${recentArticles.length} из ${sourceName}`);
+        console.log(`✅ ${sourceName}: ${recentArticles.length} материалов`);
         
       } catch (error) {
         console.log(`❌ Ошибка ${sourceName}: ${error.message}`);
@@ -157,47 +198,51 @@ async function dailyDigest(targetChatId = null) {
     
     console.log(`📊 Всего спарсено: ${allArticles.length}`);
     
-    const keywords = [
-      'getcourse', 'геткурс', 'prodamus', 'продамус',
-      'онлайн-школ', 'онлайн курс', 'edtech',
-      'лендинг', 'landing', 'tilda', 'тильда',
-      'личный кабинет', 'кабинет', 'dashboard',
-      'кастомизац', 'дизайн', 'ui/ux',
-      'javascript', 'скрипт', 'webhook', 'api',
-      'автоматизац', 'интеграц',
-      'платеж', 'оплат', 'email', 'рассылк',
-      'crm', 'воронк', 'бот', 'telegram',
-      'аналитика', 'метрика', 'конверсия'
-    ];
-    
+    // ========== ДВУХУРОВНЕВАЯ ФИЛЬТРАЦИЯ ==========
     const relevantArticles = allArticles.filter(article => {
       const text = (article.title + ' ' + article.snippet).toLowerCase();
-      return keywords.some(keyword => text.includes(keyword.toLowerCase()));
+      
+      // Проверка на исключения
+      const hasExcluded = EXCLUDE_KEYWORDS.some(keyword => text.includes(keyword.toLowerCase()));
+      if (hasExcluded) {
+        console.log(`❌ Исключено [${article.source}]: ${article.title.substring(0, 40)}... (стоп-слово)`);
+        return false;
+      }
+      
+      // Проверка ОБЯЗАТЕЛЬНЫХ ключевых слов
+      const hasPrimary = PRIMARY_KEYWORDS.some(keyword => text.includes(keyword.toLowerCase()));
+      
+      if (hasPrimary) {
+        console.log(`✅ Релевантно [PRIMARY] [${article.source}]: ${article.title.substring(0, 50)}...`);
+        return true;
+      }
+      
+      // Проверка КОНТЕКСТНЫХ слов (минимум 2 совпадения)
+      const contextMatches = CONTEXT_KEYWORDS.filter(keyword => text.includes(keyword.toLowerCase()));
+      
+      if (contextMatches.length >= 2) {
+        console.log(`✅ Релевантно [CONTEXT x${contextMatches.length}] [${article.source}]: ${article.title.substring(0, 50)}...`);
+        return true;
+      }
+      
+      return false;
     });
     
-    console.log(`🎯 Релевантных: ${relevantArticles.length}`);
-    
-    if (relevantArticles.length < 5) {
-      const softKeywords = ['веб-разработк', 'frontend', 'backend', 'react', 'node.js', 'css', 'дизайн', 'ui', 'ux'];
-      const additionalArticles = allArticles.filter(article => {
-        if (relevantArticles.includes(article)) return false;
-        const text = (article.title + ' ' + article.snippet).toLowerCase();
-        return softKeywords.some(keyword => text.includes(keyword.toLowerCase()));
-      });
-      relevantArticles.push(...additionalArticles.slice(0, 10));
-    }
+    console.log(`🎯 Релевантных материалов: ${relevantArticles.length} из ${allArticles.length}`);
     
     if (relevantArticles.length === 0) {
-      await bot.sendMessage(chatId, '❌ Нет материалов по вашей теме.');
+      await bot.sendMessage(chatId, '❌ Нет материалов по вашей теме за неделю.');
       return;
     }
     
+    // Сортировка по дате (новые первыми)
     relevantArticles.sort((a, b) => {
       const dateA = a.pubDate ? new Date(a.pubDate) : new Date(0);
       const dateB = b.pubDate ? new Date(b.pubDate) : new Date(0);
       return dateB - dateA;
     });
     
+    // Группировка по источникам (топ-3 от каждого)
     const bySource = {};
     relevantArticles.forEach(article => {
       if (!bySource[article.source]) bySource[article.source] = [];
@@ -210,6 +255,7 @@ async function dailyDigest(targetChatId = null) {
       selectedArticles.push(...top3);
     });
     
+    // Формирование дайджеста
     let digest = `📰 ДАЙДЖЕСТ: GetCourse и Prodamus.XL\n`;
     digest += `📅 ${weekAgo.toLocaleDateString('ru-RU')} - ${new Date().toLocaleDateString('ru-RU')}\n\n`;
     digest += `**Материалы (${selectedArticles.length}):**\n\n`;
@@ -229,6 +275,7 @@ async function dailyDigest(targetChatId = null) {
       });
     });
     
+    // Разбивка на сообщения (лимит Telegram 4096 символов)
     const maxLength = 4000;
     const messages = [];
     let currentMessage = '';
@@ -244,6 +291,7 @@ async function dailyDigest(targetChatId = null) {
     
     if (currentMessage) messages.push(currentMessage);
     
+    // Отправка сообщений
     for (const msg of messages) {
       await bot.sendMessage(chatId, msg, {
         parse_mode: 'Markdown',
@@ -541,7 +589,7 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
 
 // ========== РАСПИСАНИЕ ==========
 // Дайджест каждый день в 9:00 Якутск (00:00 UTC)
-cron.schedule('0 6 * * *', () => {
+cron.schedule('0 0 * * *', () => {
   console.log('⏰ Автопостинг: Дайджест (9:00 Якутск)');
   dailyDigest();
 });
@@ -553,8 +601,8 @@ cron.schedule('0 1 * * 1', () => {
 });
 
 console.log('📅 Расписание активно:');
-console.log('  - Дайджест: каждый день 9:00 Якутск');
-console.log('  - Идеи: понедельник 10:00 Якутск');
+console.log('  - Дайджест: каждый день 9:00 Якутск (00:00 UTC)');
+console.log('  - Идеи: понедельник 10:00 Якутск (01:00 UTC)');
 
 // ========== EXPRESS ==========
 const app = express();
