@@ -4,6 +4,7 @@ const cron = require('node-cron');
 const express = require('express');
 const axios = require('axios');
 const { addToSheet, getFromSheet, searchInSheet } = require('./sheets');
+const { searchYouTubeVideos } = require('./youtube-parser');
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
@@ -47,7 +48,7 @@ const RSS_SOURCES = {
   'TG: tatyankati_botaxl': 'https://rsshub.app/telegram/channel/tatyankati_botaxl',
   'TG: slowcountry': 'https://rsshub.app/telegram/channel/slowcountry',
   
-  // YouTube каналы
+  // YouTube RSS каналы (дополнительно к поиску)
   'YouTube: Владилен Минин': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCg8ss4xW9jASrqWGP30jXiw',
   'YouTube: Гоша Дударь': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCvuY904el7JvBlPbdqbfguw',
   'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
@@ -59,7 +60,7 @@ const RSS_SOURCES = {
 // ОБЯЗАТЕЛЬНЫЕ ключевые слова (хотя бы одно должно быть)
 const PRIMARY_KEYWORDS = [
   'getcourse', 'геткурс', 'гк', 'get course',
-  'prodamus', 'продамус', 'prodamus.xl', 'продамус.хл',
+  'prodamus', 'продамус',
   'онлайн-школ', 'онлайн школ', 'школа онлайн',
   'edtech', 'ed-tech', 'образовательн платформ',
   'lms', 'система обучен'
@@ -72,12 +73,12 @@ const CONTEXT_KEYWORDS = [
   'кастомизац', 'персонализац', 'дизайн интерфейс',
   'javascript', 'js', 'скрипт для сайт', 'код для сайт',
   'webhook', 'api интеграц', 'автоматизац',
-   'подписк',
+  'платеж', 'оплат', 'рассрочк', 'подписк',
   'email рассылк', 'триггер', 'автоответчик',
   'crm', 'воронк продаж', 'лидогенерац',
   'чат-бот', 'telegram бот', 'автоматизация бот',
   'аналитика онлайн', 'метрика', 'конверсия',
-  'веб-разработк', 'код', 'backend', 'оформление', 'скрипт'
+  'веб-разработк', 'frontend', 'backend', 'react', 'node.js'
 ];
 
 // ИСКЛЮЧЕНИЯ (НЕ показывать, даже если есть ключевые слова)
@@ -150,15 +151,18 @@ async function dailyDigest(targetChatId = null) {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     
-    console.log(`📅 Период: ${weekAgo.toLocaleDateString('ru-RU')} - ${new Date().toLocaleDateString('ru-RU')}`);
+    console.log(`\n📅 ========== ПАРСИНГ НАЧАТ ==========`);
+    console.log(`📅 Период: ${weekAgo.toLocaleDateString('ru-RU')} - ${new Date().toLocaleDateString('ru-RU')}\n`);
     
+    // ========== ПАРСИНГ RSS ==========
+    console.log(`📰 ========== ПАРСИНГ RSS ==========`);
     for (const [sourceName, rssUrl] of Object.entries(RSS_SOURCES)) {
       try {
-        console.log(`📥 Парсинг: ${sourceName}...`);
+        console.log(`📥 ${sourceName}...`);
         const feed = await parser.parseURL(rssUrl);
         
         if (!feed || !feed.items || feed.items.length === 0) {
-          console.log(`⚠️ Нет данных: ${sourceName}`);
+          console.log(`   ⚠️ Нет данных`);
           continue;
         }
         
@@ -183,12 +187,28 @@ async function dailyDigest(targetChatId = null) {
           }));
         
         allArticles.push(...recentArticles);
-        console.log(`✅ ${sourceName}: ${recentArticles.length} материалов`);
+        console.log(`   ✅ ${recentArticles.length} материалов`);
         
       } catch (error) {
-        console.log(`❌ Ошибка ${sourceName}: ${error.message}`);
+        console.log(`   ❌ Ошибка: ${error.message}`);
       }
     }
+    
+    console.log(`📰 RSS ИТОГО: ${allArticles.length} материалов`);
+    console.log(`========================================\n`);
+    
+    // ========== ПАРСИНГ YOUTUBE (через API) ==========
+    try {
+      const youtubeVideos = await searchYouTubeVideos(7);
+      if (youtubeVideos.length > 0) {
+        allArticles.push(...youtubeVideos);
+        console.log(`📊 С YouTube добавлено: ${youtubeVideos.length} видео`);
+      }
+    } catch (error) {
+      console.log(`⚠️ Ошибка YouTube Search: ${error.message}`);
+    }
+    
+    console.log(`\n📊 ========== ВСЕГО СПАРСЕНО: ${allArticles.length} ==========\n`);
     
     if (allArticles.length === 0) {
       console.log('⚠️ Нет свежих материалов');
@@ -196,16 +216,15 @@ async function dailyDigest(targetChatId = null) {
       return;
     }
     
-    console.log(`📊 Всего спарсено: ${allArticles.length}`);
-    
     // ========== ДВУХУРОВНЕВАЯ ФИЛЬТРАЦИЯ ==========
+    console.log(`🎯 ========== ФИЛЬТРАЦИЯ ==========`);
     const relevantArticles = allArticles.filter(article => {
       const text = (article.title + ' ' + article.snippet).toLowerCase();
       
       // Проверка на исключения
       const hasExcluded = EXCLUDE_KEYWORDS.some(keyword => text.includes(keyword.toLowerCase()));
       if (hasExcluded) {
-        console.log(`❌ Исключено [${article.source}]: ${article.title.substring(0, 40)}... (стоп-слово)`);
+        console.log(`❌ ИСКЛЮЧЕНО [${article.source}]: ${article.title.substring(0, 40)}...`);
         return false;
       }
       
@@ -213,7 +232,7 @@ async function dailyDigest(targetChatId = null) {
       const hasPrimary = PRIMARY_KEYWORDS.some(keyword => text.includes(keyword.toLowerCase()));
       
       if (hasPrimary) {
-        console.log(`✅ Релевантно [PRIMARY] [${article.source}]: ${article.title.substring(0, 50)}...`);
+        console.log(`✅ PRIMARY [${article.source}]: ${article.title.substring(0, 50)}...`);
         return true;
       }
       
@@ -221,14 +240,15 @@ async function dailyDigest(targetChatId = null) {
       const contextMatches = CONTEXT_KEYWORDS.filter(keyword => text.includes(keyword.toLowerCase()));
       
       if (contextMatches.length >= 2) {
-        console.log(`✅ Релевантно [CONTEXT x${contextMatches.length}] [${article.source}]: ${article.title.substring(0, 50)}...`);
+        console.log(`✅ CONTEXT x${contextMatches.length} [${article.source}]: ${article.title.substring(0, 50)}...`);
         return true;
       }
       
       return false;
     });
     
-    console.log(`🎯 Релевантных материалов: ${relevantArticles.length} из ${allArticles.length}`);
+    console.log(`🎯 РЕЛЕВАНТНЫХ: ${relevantArticles.length} из ${allArticles.length}`);
+    console.log(`========================================\n`);
     
     if (relevantArticles.length === 0) {
       await bot.sendMessage(chatId, '❌ Нет материалов по вашей теме за неделю.');
@@ -405,7 +425,7 @@ bot.onText(/\/start/, (msg) => {
 • Создание лендингов и продающих сайтов
 • Скрипты для онлайн-платформ
 
-🚀 Powered by Perplexity AI`
+🚀 Powered by Perplexity AI + YouTube Data API`
   );
 });
 
@@ -609,7 +629,7 @@ const app = express();
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('🤖 GetCourse & Prodamus.XL Bot на Perplexity AI!');
+  res.send('🤖 GetCourse & Prodamus.XL Bot на Perplexity AI + YouTube!');
 });
 
 app.get('/health', (req, res) => {
