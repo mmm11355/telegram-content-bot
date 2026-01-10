@@ -12,6 +12,30 @@ const CHANNEL_ID = process.env.CHANNEL_ID;
 
 const bot = new TelegramBot(TELEGRAM_TOKEN);
 
+// ========== ЭКРАНИРОВАНИЕ MARKDOWN ==========
+function escapeMarkdown(text) {
+  if (!text) return '';
+  return text
+    .replace(/\_/g, '\\_')
+    .replace(/\*/g, '\\*')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    .replace(/\~/g, '\\~')
+    .replace(/\`/g, '\\`')
+    .replace(/\>/g, '\\>')
+    .replace(/\#/g, '\\#')
+    .replace(/\+/g, '\\+')
+    .replace(/\-/g, '\\-')
+    .replace(/\=/g, '\\=')
+    .replace(/\|/g, '\\|')
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}')
+    .replace(/\./g, '\\.')
+    .replace(/\!/g, '\\!');
+}
+
 // ========== ПАРСЕР С USER-AGENT ==========
 const parser = new Parser({
   timeout: 15000,
@@ -68,7 +92,6 @@ const RSS_SOURCES = {
   'YouTube: WebForMyself': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCGuhp4lpQvK94ZC5kuOZbjA',
   'YouTube: Анна Блок': 'https://www.youtube.com/feeds/videos.xml?channel_id=UCn5wduCq2Mus0v85QZn9IaA',
 };
-
 
 // ========== ФИЛЬТРАЦИЯ ПО ТЕМАТИКЕ ==========
 
@@ -290,10 +313,10 @@ async function dailyDigest(targetChatId = null) {
       selectedArticles.push(...top3);
     });
     
-    // Формирование дайджеста
+    // Формирование дайджеста С ЭКРАНИРОВАНИЕМ
     let digest = `📰 ДАЙДЖЕСТ: GetCourse и Prodamus.XL\n`;
     digest += `📅 ${weekAgo.toLocaleDateString('ru-RU')} - ${new Date().toLocaleDateString('ru-RU')}\n\n`;
-    digest += `**Материалы (${selectedArticles.length}):**\n\n`;
+    digest += `Материалов: ${selectedArticles.length}\n\n`;
     
     const groupedForDisplay = {};
     selectedArticles.forEach(article => {
@@ -301,12 +324,14 @@ async function dailyDigest(targetChatId = null) {
       groupedForDisplay[article.source].push(article);
     });
     
+    // ВАЖНО: ЭКРАНИРУЕМ ЗАГОЛОВКИ И ИСТОЧНИКИ
     Object.entries(groupedForDisplay).forEach(([source, articles]) => {
-      digest += `**${source}:**\n`;
+      digest += `${escapeMarkdown(source)}:\n`;
       articles.forEach((article, idx) => {
-        digest += `${idx + 1}. ${article.type} ${article.title}\n`;
+        const safeTitle = escapeMarkdown(article.title);
+        digest += `${idx + 1}. ${article.type} ${safeTitle}\n`;
         digest += `   📅 ${article.dateFormatted}\n`;
-        digest += `   🔗 ${article.link}\n\n`;
+        digest += `   ${article.link}\n\n`;
       });
     });
     
@@ -326,10 +351,9 @@ async function dailyDigest(targetChatId = null) {
     
     if (currentMessage) messages.push(currentMessage);
     
-    // Отправка сообщений
+    // Отправка сообщений БЕЗ MARKDOWN (чтобы избежать ошибок)
     for (const msg of messages) {
       await bot.sendMessage(chatId, msg, {
-        parse_mode: 'Markdown',
         disable_web_page_preview: true
       });
     }
@@ -393,17 +417,15 @@ async function generateIdeas(targetChatId = null) {
 5. Платежи Prodamus.XL
 
 Для каждой идеи:
-1. **Название** (конкретное, с цифрами)
-2. **Формат** (пост/видео/кейс)
-3. **Польза** (результат для читателя)
+1. Название (конкретное, с цифрами)
+2. Формат (пост/видео/кейс)
+3. Польза (результат для читателя)
 
 Максимум 1200 символов. ТОЛЬКО НА РУССКОМ.`;
 
     const ideas = await askPerplexity(prompt);
     
-    await bot.sendMessage(chatId, `💡 ИДЕИ КОНТЕНТА НА НЕДЕЛЮ\n\n${ideas}`, {
-      parse_mode: 'Markdown'
-    });
+    await bot.sendMessage(chatId, `💡 ИДЕИ КОНТЕНТА НА НЕДЕЛЮ\n\n${ideas}`);
     
     console.log('✅ Идеи опубликованы!');
     
@@ -418,26 +440,26 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, 
     `👋 Привет! Я AI-помощник по автоматизации GetCourse и Prodamus.XL.
 
-**Команды:**
+Команды:
 /digest - дайджест материалов сейчас
 /ideas - сгенерировать 5 идей для контента
 /stats - статистика базы материалов  
-/analyze [URL] - проанализировать статью или лендинг
+/analyze [URL] - проанализировать статью
 /search [слово] - поиск в базе знаний
 
-**Примеры:**
+Примеры:
 • /analyze https://www.cossa.ru/trends/346066/
 • /search getcourse
 
-**Автоматически:**
+Автоматически:
 📅 Каждый день в 9:00 - дайджест
-💡 Каждый понедельник в 10:00 - идеи контента
+💡 Каждый понедельник в 10:00 - идеи
 📊 Всё сохраняется в Google Таблицу
 
-**Тематика:**
+Тематика:
 • Автоматизация GetCourse и Prodamus.XL
 • Кастомизация личных кабинетов
-• Создание лендингов и продающих сайтов
+• Создание лендингов
 • Скрипты для онлайн-платформ
 
 🚀 Powered by Perplexity AI + YouTube Data API`
@@ -482,14 +504,14 @@ bot.onText(/\/stats/, async (msg) => {
     let stats = `📊 СТАТИСТИКА БАЗЫ ЗНАНИЙ\n\n`;
     stats += `📚 Всего материалов: ${allData.length}\n\n`;
     
-    stats += `**По категориям:**\n`;
+    stats += `По категориям:\n`;
     Object.entries(categories)
       .sort((a, b) => b[1] - a[1])
       .forEach(([cat, count]) => {
         stats += `• ${cat}: ${count}\n`;
       });
     
-    stats += `\n**По источникам (топ-5):**\n`;
+    stats += `\nПо источникам (топ-5):\n`;
     Object.entries(sources)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
@@ -497,7 +519,7 @@ bot.onText(/\/stats/, async (msg) => {
         stats += `• ${src}: ${count}\n`;
       });
     
-    await bot.sendMessage(chatId, stats, { parse_mode: 'Markdown' });
+    await bot.sendMessage(chatId, stats);
     
   } catch (error) {
     console.error('❌ Ошибка stats:', error);
@@ -541,10 +563,10 @@ URL: ${url}
 ${text}
 
 ЗАДАЧА:
-1. **Главная идея** (1-2 предложения)
-2. **Применение для GetCourse/Prodamus** (конкретные действия)
-3. **Ключевые инсайты** (3-5 пунктов)
-4. **Идеи контента** (2-3 идеи для постов/видео)
+1. Главная идея (1-2 предложения)
+2. Применение для GetCourse/Prodamus (конкретные действия)
+3. Ключевые инсайты (3-5 пунктов)
+4. Идеи контента (2-3 идеи для постов/видео)
 
 Формат: краткий, структурированный, НА РУССКОМ, максимум 800 символов.`;
 
@@ -553,7 +575,6 @@ ${text}
     const result = `📊 АНАЛИЗ СТАТЬИ\n\n${analysis}\n\n🔗 ${url}`;
     
     await bot.sendMessage(chatId, result, {
-      parse_mode: 'Markdown',
       disable_web_page_preview: false
     });
     
@@ -600,7 +621,7 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
     response += `Найдено: ${results.length}\n\n`;
     
     results.slice(0, 10).forEach((item, idx) => {
-      response += `${idx + 1}. **${item.title}**\n`;
+      response += `${idx + 1}. ${item.title}\n`;
       response += `   📂 ${item.category} | 📅 ${item.date}\n`;
       response += `   🔗 ${item.url}\n\n`;
     });
@@ -610,7 +631,6 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
     }
     
     await bot.sendMessage(chatId, response, {
-      parse_mode: 'Markdown',
       disable_web_page_preview: true
     });
     
@@ -623,13 +643,11 @@ bot.onText(/\/search (.+)/, async (msg, match) => {
 });
 
 // ========== РАСПИСАНИЕ ==========
-// Дайджест каждый день в 9:00 Якутск (00:00 UTC)
 cron.schedule('0 0 * * *', () => {
   console.log('⏰ Автопостинг: Дайджест (9:00 Якутск)');
   dailyDigest();
 });
 
-// Идеи каждый понедельник в 10:00 Якутск (01:00 UTC)
 cron.schedule('0 1 * * 1', () => {
   console.log('⏰ Автопостинг: Идеи (10:00 понедельник Якутск)');
   generateIdeas();
